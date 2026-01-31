@@ -717,43 +717,42 @@ with st.sidebar:
     if 'data_source' not in st.session_state:
         st.session_state.data_source = "📁 Fixed Dataset"
     
-    # Only show Live Feed option when running locally with Docker
-    if IS_STREAMLIT_CLOUD:
-        st.markdown("""
-        <div style='background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); 
-                    padding: 0.5rem; border-radius: 8px; margin: 0.5rem 0;'>
-            <span style='color: #3B82F6; font-size: 0.8rem;'>☁️ Cloud Mode - Using Fixed Dataset</span>
-        </div>
-        """, unsafe_allow_html=True)
-        data_source = "📁 Fixed Dataset"
-    else:
-        data_source = st.radio(
-            "Choose data source:",
-            options=["📁 Fixed Dataset", "🔴 Live Feed"],
-            index=0 if st.session_state.data_source == "📁 Fixed Dataset" else 1,
-            key="data_source_radio",
-            horizontal=True,
-            help="Switch between your fixed CSV dataset and live streaming data"
-        )
+    # Show data source toggle (always visible)
+    data_source = st.radio(
+        "Choose data source:",
+        options=["📁 Fixed Dataset", "🔴 Live Feed"],
+        index=0 if st.session_state.data_source == "📁 Fixed Dataset" else 1,
+        key="data_source_radio",
+        horizontal=True,
+        help="Switch between your fixed CSV dataset and live streaming data"
+    )
     st.session_state.data_source = data_source
     
-    # Show data source status (only when running locally)
-    if not IS_STREAMLIT_CLOUD and data_source == "🔴 Live Feed":
-        live_data_path = '/app/data/live_data.csv'
-        if os.path.exists(live_data_path):
+    # Show data source status
+    if data_source == "🔴 Live Feed":
+        if IS_STREAMLIT_CLOUD:
             st.markdown("""
-            <div style='background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); 
+            <div style='background: rgba(234, 179, 8, 0.1); border: 1px solid rgba(234, 179, 8, 0.3); 
                         padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
-                <span style='color: #22C55E; font-size: 0.8rem;'>🟢 Live data connected</span>
+                <span style='color: #EAB308; font-size: 0.8rem;'>⚠️ Live Feed requires Docker - Run locally for streaming</span>
             </div>
             """, unsafe_allow_html=True)
         else:
-            st.markdown("""
-            <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); 
-                        padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
-                <span style='color: #EF4444; font-size: 0.8rem;'>🔴 Live data not available</span>
-            </div>
-            """, unsafe_allow_html=True)
+            live_data_path = '/app/data/live_data.csv'
+            if os.path.exists(live_data_path):
+                st.markdown("""
+                <div style='background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); 
+                            padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
+                    <span style='color: #22C55E; font-size: 0.8rem;'>🟢 Live data connected</span>
+                </div>
+                """, unsafe_allow_html=True)
+            else:
+                st.markdown("""
+                <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); 
+                            padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
+                    <span style='color: #EF4444; font-size: 0.8rem;'>🔴 Live data not available</span>
+                </div>
+                """, unsafe_allow_html=True)
     else:
         st.markdown("""
         <div style='background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); 
