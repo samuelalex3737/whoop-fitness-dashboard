@@ -1,6 +1,23 @@
 version: '3.8'
 
 services:
+  # ═══════════════════════════════════════════════════════════════════════
+  # 🔴 LIVE DATA GENERATOR SERVICE
+  # Continuously generates synthetic WHOOP data
+  # ═══════════════════════════════════════════════════════════════════════
+  data-generator:
+    build: .
+    container_name: whoop-data-generator
+    entrypoint: ["python", "live_data_generator.py"]
+    volumes:
+      - live-data:/app/data
+      - ./live_data_generator.py:/app/live_data_generator.py:ro
+    restart: unless-stopped
+
+  # ═══════════════════════════════════════════════════════════════════════
+  # 📊 MAIN DASHBOARD SERVICE
+  # Streamlit dashboard with live data integration
+  # ═══════════════════════════════════════════════════════════════════════
   whoop-dashboard:
     build: .
     container_name: whoop-fitness-dashboard
@@ -8,10 +25,15 @@ services:
       - "8501:8501"
     volumes:
       - ./whoop_fitness.csv:/app/whoop_fitness.csv:ro
+      - ./app.py:/app/app.py:ro
+      - live-data:/app/data
     environment:
       - STREAMLIT_SERVER_PORT=8501
       - STREAMLIT_SERVER_ADDRESS=0.0.0.0
       - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+      - LIVE_DATA_ENABLED=true
+    depends_on:
+      - data-generator
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8501/_stcore/health"]
@@ -19,3 +41,10 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
+
+# ═══════════════════════════════════════════════════════════════════════
+# 📁 SHARED VOLUME FOR LIVE DATA
+# ═══════════════════════════════════════════════════════════════════════
+volumes:
+  live-data:
+    driver: local

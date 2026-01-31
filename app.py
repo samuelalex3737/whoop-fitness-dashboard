@@ -491,6 +491,121 @@ st.markdown("""
     .animate-pulse {
         animation: pulse 2s ease-in-out infinite;
     }
+    
+    /* ═══════════════════════════════════════════════════════════════════════
+       SCROLLABLE TABS - Horizontal scroll for many tabs
+    ═══════════════════════════════════════════════════════════════════════ */
+    .stTabs [data-baseweb="tab-list"] {
+        gap: 4px;
+        background: var(--bg-card);
+        padding: 8px 12px;
+        border-radius: 16px;
+        border: 1px solid var(--border-color);
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+        overflow-x: auto !important;
+        overflow-y: hidden !important;
+        flex-wrap: nowrap !important;
+        white-space: nowrap !important;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: thin;
+        scrollbar-color: var(--primary) var(--bg-dark);
+    }
+    
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar {
+        height: 6px;
+    }
+    
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-track {
+        background: var(--bg-dark);
+        border-radius: 3px;
+    }
+    
+    .stTabs [data-baseweb="tab-list"]::-webkit-scrollbar-thumb {
+        background: var(--primary);
+        border-radius: 3px;
+    }
+    
+    .stTabs [data-baseweb="tab"] {
+        flex-shrink: 0 !important;
+        min-width: fit-content !important;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════
+       FILTER CLICK EFFECTS - Shadow/glow when clicked
+    ═══════════════════════════════════════════════════════════════════════ */
+    /* Multiselect click/focus effect */
+    .stMultiSelect > div > div:focus-within {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.3), 0 0 20px rgba(0, 212, 170, 0.2) !important;
+        transform: scale(1.01);
+        transition: all 0.2s ease !important;
+    }
+    
+    /* Multiselect when has selections - subtle glow */
+    .stMultiSelect [data-baseweb="tag"] {
+        animation: tagPulse 0.3s ease-out;
+    }
+    
+    @keyframes tagPulse {
+        0% { transform: scale(0.8); opacity: 0; }
+        50% { transform: scale(1.1); }
+        100% { transform: scale(1); opacity: 1; }
+    }
+    
+    /* Button click effect */
+    .stButton > button:active {
+        transform: scale(0.95) !important;
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.5), inset 0 0 10px rgba(0, 212, 170, 0.2) !important;
+    }
+    
+    /* Slider click effect */
+    .stSlider > div > div > div[role="slider"]:active {
+        transform: scale(1.2);
+        box-shadow: 0 0 20px rgba(0, 212, 170, 0.6) !important;
+    }
+    
+    /* Date picker click effect */
+    .stDateInput > div > div:focus-within {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.3), 0 0 15px rgba(0, 212, 170, 0.2) !important;
+    }
+    
+    /* Checkbox click effect */
+    .stCheckbox > label:active {
+        transform: scale(0.98);
+    }
+    
+    .stCheckbox [data-testid="stCheckbox"] > label > div:first-child {
+        transition: all 0.2s ease !important;
+    }
+    
+    .stCheckbox [data-testid="stCheckbox"]:has(input:checked) > label > div:first-child {
+        box-shadow: 0 0 10px rgba(0, 212, 170, 0.5) !important;
+    }
+    
+    /* Select box click effect */
+    .stSelectbox > div > div:focus-within {
+        border-color: var(--primary) !important;
+        box-shadow: 0 0 0 3px rgba(0, 212, 170, 0.3), 0 0 15px rgba(0, 212, 170, 0.2) !important;
+    }
+    
+    /* Radio button click effect */
+    .stRadio > div > label:active {
+        transform: scale(0.98);
+    }
+    
+    .stRadio [data-testid="stRadio"] > div > label > div:first-child {
+        transition: all 0.2s ease !important;
+    }
+    
+    /* Data source toggle special styling */
+    .data-source-toggle {
+        background: linear-gradient(135deg, rgba(0, 212, 170, 0.1) 0%, rgba(99, 102, 241, 0.1) 100%);
+        border: 2px solid var(--primary);
+        border-radius: 12px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
 </style>
 """, unsafe_allow_html=True)
 
@@ -586,7 +701,57 @@ with st.sidebar:
     """, unsafe_allow_html=True)
     
     # ═══════════════════════════════════════════════════════════════════════
-    # 📅 ADVANCED DATE RANGE FILTER
+    # � DATA SOURCE TOGGLE
+    # ═══════════════════════════════════════════════════════════════════════
+    st.markdown("""
+    <div style='background: linear-gradient(90deg, #6366F1 0%, transparent 100%); padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;'>
+        <span style='font-weight: 600; font-size: 0.95rem;'>🔀 DATA SOURCE</span>
+    </div>
+    """, unsafe_allow_html=True)
+    
+    # Initialize data source in session state
+    if 'data_source' not in st.session_state:
+        st.session_state.data_source = "📁 Fixed Dataset"
+    
+    data_source = st.radio(
+        "Choose data source:",
+        options=["📁 Fixed Dataset", "🔴 Live Feed"],
+        index=0 if st.session_state.data_source == "📁 Fixed Dataset" else 1,
+        key="data_source_radio",
+        horizontal=True,
+        help="Switch between your fixed CSV dataset and live streaming data"
+    )
+    st.session_state.data_source = data_source
+    
+    # Show data source status
+    if data_source == "🔴 Live Feed":
+        live_data_path = '/app/data/live_data.csv'
+        if os.path.exists(live_data_path):
+            st.markdown("""
+            <div style='background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); 
+                        padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
+                <span style='color: #22C55E; font-size: 0.8rem;'>🟢 Live data connected</span>
+            </div>
+            """, unsafe_allow_html=True)
+        else:
+            st.markdown("""
+            <div style='background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); 
+                        padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
+                <span style='color: #EF4444; font-size: 0.8rem;'>🔴 Live data not available</span>
+            </div>
+            """, unsafe_allow_html=True)
+    else:
+        st.markdown("""
+        <div style='background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); 
+                    padding: 0.5rem; border-radius: 8px; margin-top: 0.5rem;'>
+            <span style='color: #3B82F6; font-size: 0.8rem;'>📁 Using fixed dataset (100K records)</span>
+        </div>
+        """, unsafe_allow_html=True)
+    
+    st.markdown("<div style='margin: 1rem 0; border-top: 1px solid rgba(255,255,255,0.1);'></div>", unsafe_allow_html=True)
+    
+    # ═══════════════════════════════════════════════════════════════════════
+    # �📅 ADVANCED DATE RANGE FILTER
     # ═══════════════════════════════════════════════════════════════════════
     st.markdown("""
     <div style='background: linear-gradient(90deg, #00D4AA 0%, transparent 100%); padding: 0.5rem 1rem; border-radius: 8px; margin-bottom: 0.75rem;'>
@@ -618,26 +783,37 @@ with st.sidebar:
     if 'end_date' not in st.session_state:
         st.session_state.end_date = max_date
     
-    # Handle preset button clicks
+    # Handle preset button clicks with immediate rerun
     from datetime import timedelta
+    date_changed = False
     if last_7d:
         st.session_state.start_date = max_date - timedelta(days=7)
         st.session_state.end_date = max_date
+        date_changed = True
     elif last_30d:
         st.session_state.start_date = max_date - timedelta(days=30)
         st.session_state.end_date = max_date
+        date_changed = True
     elif last_90d:
         st.session_state.start_date = max_date - timedelta(days=90)
         st.session_state.end_date = max_date
+        date_changed = True
     elif last_6m:
         st.session_state.start_date = max_date - timedelta(days=180)
         st.session_state.end_date = max_date
+        date_changed = True
     elif last_1y:
         st.session_state.start_date = max_date - timedelta(days=365)
         st.session_state.end_date = max_date
+        date_changed = True
     elif all_time:
         st.session_state.start_date = min_date
         st.session_state.end_date = max_date
+        date_changed = True
+    
+    # Force rerun if date preset was clicked
+    if date_changed:
+        st.rerun()
     
     # Custom date range picker
     st.markdown("<p style='color: #888; font-size: 0.8rem; margin: 0.75rem 0 0.25rem 0;'>🎯 Custom Range:</p>", unsafe_allow_html=True)
@@ -649,7 +825,8 @@ with st.sidebar:
             value=st.session_state.start_date,
             min_value=min_date,
             max_value=max_date,
-            key="start_picker"
+            key="start_picker",
+            on_change=lambda: setattr(st.session_state, 'start_date', st.session_state.start_picker)
         )
     with date_col2:
         end_date = st.date_input(
@@ -657,8 +834,13 @@ with st.sidebar:
             value=st.session_state.end_date,
             min_value=min_date,
             max_value=max_date,
-            key="end_picker"
+            key="end_picker",
+            on_change=lambda: setattr(st.session_state, 'end_date', st.session_state.end_picker)
         )
+    
+    # Sync session state with picker values for immediate reactivity
+    st.session_state.start_date = start_date
+    st.session_state.end_date = end_date
     
     # Store the final date range
     date_range = (start_date, end_date)
@@ -681,26 +863,58 @@ with st.sidebar:
         # Gender with icons
         gender_options = df['gender'].unique().tolist()
         gender_icons = {'Male': '👨', 'Female': '👩', 'Other': '🧑'}
-        gender_display = [f"{gender_icons.get(g, '👤')} {g}" for g in gender_options]
+        
+        # Gender All/Clear buttons
+        gcol1, gcol2 = st.columns(2)
+        with gcol1:
+            if st.button("✅ All", key="gender_all", use_container_width=True):
+                st.session_state.gender_selection = gender_options
+                st.rerun()
+        with gcol2:
+            if st.button("❌ Clear", key="gender_clear", use_container_width=True):
+                st.session_state.gender_selection = []
+                st.rerun()
+        
+        # Initialize gender selection in session state
+        if 'gender_selection' not in st.session_state:
+            st.session_state.gender_selection = gender_options
         
         selected_gender = st.multiselect(
             "Gender",
             options=gender_options,
-            default=gender_options,
-            format_func=lambda x: f"{gender_icons.get(x, '👤')} {x}"
+            default=st.session_state.gender_selection,
+            format_func=lambda x: f"{gender_icons.get(x, '👤')} {x}",
+            key="gender_select"
         )
+        st.session_state.gender_selection = selected_gender
         
         # Fitness Level with color coding
         fitness_options = df['fitness_level'].unique().tolist()
         fitness_order = ['Beginner', 'Intermediate', 'Advanced', 'Elite']
         fitness_options = [f for f in fitness_order if f in fitness_options]
         
+        # Fitness All/Clear buttons
+        fcol1, fcol2 = st.columns(2)
+        with fcol1:
+            if st.button("✅ All", key="fitness_all", use_container_width=True):
+                st.session_state.fitness_selection = fitness_options
+                st.rerun()
+        with fcol2:
+            if st.button("❌ Clear", key="fitness_clear", use_container_width=True):
+                st.session_state.fitness_selection = []
+                st.rerun()
+        
+        if 'fitness_selection' not in st.session_state:
+            st.session_state.fitness_selection = fitness_options
+        
         selected_fitness = st.multiselect(
             "Fitness Level",
             options=fitness_options,
-            default=fitness_options,
-            format_func=lambda x: f"{'🌱' if x=='Beginner' else '🌿' if x=='Intermediate' else '🌳' if x=='Advanced' else '🏆'} {x}"
+            default=st.session_state.fitness_selection,
+            format_func=lambda x: f"{'🌱' if x=='Beginner' else '🌿' if x=='Intermediate' else '🌳' if x=='Advanced' else '🏆'} {x}",
+            key="fitness_select"
         )
+        st.session_state.fitness_selection = selected_fitness
         
         # Age Groups
         age_options = df['age_group'].unique().tolist()
@@ -708,12 +922,28 @@ with st.sidebar:
         age_order = ['18-25', '26-35', '36-45', '46-55', '55+']
         age_options = [a for a in age_order if a in age_options]
         
+        # Age All/Clear buttons
+        acol1, acol2 = st.columns(2)
+        with acol1:
+            if st.button("✅ All", key="age_all", use_container_width=True):
+                st.session_state.age_selection = age_options
+                st.rerun()
+        with acol2:
+            if st.button("❌ Clear", key="age_clear", use_container_width=True):
+                st.session_state.age_selection = []
+                st.rerun()
+        
+        if 'age_selection' not in st.session_state:
+            st.session_state.age_selection = age_options
+        
         selected_age = st.multiselect(
             "Age Group",
             options=age_options,
-            default=age_options,
-            format_func=lambda x: f"{'👶' if x=='18-25' else '🧑' if x=='26-35' else '👨' if x=='36-45' else '👴' if x=='46-55' else '🎖️'} {x}"
+            default=st.session_state.age_selection,
+            format_func=lambda x: f"{'👶' if x=='18-25' else '🧑' if x=='26-35' else '👨' if x=='36-45' else '👴' if x=='46-55' else '🎖️'} {x}",
+            key="age_select"
         )
+        st.session_state.age_selection = selected_age
     
     # ═══════════════════════════════════════════════════════════════════════
     # 🏃 ACTIVITY FILTERS (Collapsible)
@@ -726,21 +956,54 @@ with st.sidebar:
             'Stretching': '🤸', 'Walking': '🚶', 'Sports': '⚽'
         }
         
+        # Activity All/Clear buttons
+        atcol1, atcol2 = st.columns(2)
+        with atcol1:
+            if st.button("✅ All", key="activity_all", use_container_width=True):
+                st.session_state.activity_selection = activity_types
+                st.rerun()
+        with atcol2:
+            if st.button("❌ Clear", key="activity_clear", use_container_width=True):
+                st.session_state.activity_selection = []
+                st.rerun()
+        
+        if 'activity_selection' not in st.session_state:
+            st.session_state.activity_selection = activity_types
+        
         selected_activities = st.multiselect(
             "Activity Type",
             options=activity_types,
-            default=activity_types,
-            format_func=lambda x: f"{activity_icons.get(x, '🎯')} {x}"
+            default=st.session_state.activity_selection,
+            format_func=lambda x: f"{activity_icons.get(x, '🎯')} {x}",
+            key="activity_select"
         )
+        st.session_state.activity_selection = selected_activities
         
         # Primary Sports
         sport_options = df['primary_sport'].unique().tolist()
+        
+        # Sport All/Clear buttons
+        spcol1, spcol2 = st.columns(2)
+        with spcol1:
+            if st.button("✅ All", key="sport_all", use_container_width=True):
+                st.session_state.sport_selection = sport_options
+                st.rerun()
+        with spcol2:
+            if st.button("❌ Clear", key="sport_clear", use_container_width=True):
+                st.session_state.sport_selection = []
+                st.rerun()
+        
+        if 'sport_selection' not in st.session_state:
+            st.session_state.sport_selection = sport_options
+        
         selected_sports = st.multiselect(
             "Primary Sport",
             options=sport_options,
-            default=sport_options,
-            format_func=lambda x: f"🏅 {x}"
+            default=st.session_state.sport_selection,
+            format_func=lambda x: f"🏅 {x}",
+            key="sport_select"
         )
+        st.session_state.sport_selection = selected_sports
     
     # ═══════════════════════════════════════════════════════════════════════
     # 🌤️ SEASON & PERFORMANCE FILTERS (Collapsible)
@@ -749,12 +1012,28 @@ with st.sidebar:
         season_icons = {'Winter': '❄️', 'Spring': '🌸', 'Summer': '☀️', 'Fall': '🍂'}
         season_options = ['Winter', 'Spring', 'Summer', 'Fall']
         
+        # Season All/Clear buttons
+        secol1, secol2 = st.columns(2)
+        with secol1:
+            if st.button("✅ All", key="season_all", use_container_width=True):
+                st.session_state.season_selection = season_options
+                st.rerun()
+        with secol2:
+            if st.button("❌ Clear", key="season_clear", use_container_width=True):
+                st.session_state.season_selection = []
+                st.rerun()
+        
+        if 'season_selection' not in st.session_state:
+            st.session_state.season_selection = season_options
+        
         selected_seasons = st.multiselect(
             "Season",
             options=season_options,
-            default=season_options,
-            format_func=lambda x: f"{season_icons.get(x, '🌍')} {x}"
+            default=st.session_state.season_selection,
+            format_func=lambda x: f"{season_icons.get(x, '🌍')} {x}",
+            key="season_select"
         )
+        st.session_state.season_selection = selected_seasons
         
         st.markdown("<p style='color: #888; font-size: 0.75rem; margin-top: 1rem;'>🎚️ Recovery Filter:</p>", unsafe_allow_html=True)
         recovery_range = st.slider(
@@ -911,7 +1190,8 @@ with col6:
 # ============================================================================
 # NAVIGATION TABS
 # ============================================================================
-tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
+tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
+    "🟢 Live Feed",
     "🌳 Overview & Treemap",
     "📈 Trends & Dual-Axis", 
     "🔥 Heatmaps & Seasons",
@@ -923,9 +1203,304 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7 = st.tabs([
 
 
 # ============================================================================
-# TAB 1: OVERVIEW & TREEMAP
+# TAB 0: LIVE DATA FEED
 # ============================================================================
 with tab1:
+    # Check data source selection
+    if st.session_state.get('data_source', '📁 Fixed Dataset') == "🔴 Live Feed":
+        st.markdown("### 🔴 Real-Time WHOOP Data Feed")
+        st.markdown("> **Live streaming data from WHOOP devices** - Updates every 3 seconds with synthetic fitness metrics")
+        
+        # Auto-refresh settings
+        live_col1, live_col2, live_col3 = st.columns([2, 1, 1])
+        with live_col1:
+            auto_refresh = st.checkbox("🔄 Enable Auto-Refresh", value=False, key="auto_refresh")
+        with live_col2:
+            refresh_rate = st.selectbox("Refresh Rate (sec)", [3, 5, 10, 30], index=1, key="refresh_rate")
+        with live_col3:
+            if st.button("🔄 Refresh Now", key="manual_refresh"):
+                st.rerun()
+        
+        # Load live data
+        live_data_path = '/app/data/live_data.csv'
+        
+        if os.path.exists(live_data_path):
+            try:
+                live_df = pd.read_csv(live_data_path)
+                
+                if len(live_df) > 0:
+                    # Convert timestamp
+                    live_df['timestamp'] = pd.to_datetime(live_df['timestamp'])
+                    
+                    # ═══════════════════════════════════════════════════════════════
+                    # LIVE METRICS HEADER
+                    # ═══════════════════════════════════════════════════════════════
+                    st.markdown("---")
+                    st.markdown("### 📊 Live Metrics Dashboard")
+                    
+                    lm1, lm2, lm3, lm4, lm5 = st.columns(5)
+                    
+                    with lm1:
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                                    padding: 1.2rem; border-radius: 12px; text-align: center;
+                                    border: 1px solid rgba(0, 212, 170, 0.3);'>
+                            <p style='color: #888; margin: 0; font-size: 0.75rem;'>🟢 LIVE RECORDS</p>
+                            <h2 style='color: #00D4AA; margin: 0.3rem 0;'>{:,}</h2>
+                            <p style='color: #00D4AA; margin: 0; font-size: 0.8rem;'>⚡ Streaming</p>
+                        </div>
+                        """.format(len(live_df)), unsafe_allow_html=True)
+                    
+                    with lm2:
+                        active_users = live_df['user_id'].nunique()
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                                    padding: 1.2rem; border-radius: 12px; text-align: center;
+                                    border: 1px solid rgba(59, 130, 246, 0.3);'>
+                            <p style='color: #888; margin: 0; font-size: 0.75rem;'>👥 ACTIVE USERS</p>
+                            <h2 style='color: #3B82F6; margin: 0.3rem 0;'>{}</h2>
+                            <p style='color: #3B82F6; margin: 0; font-size: 0.8rem;'>Connected</p>
+                        </div>
+                        """.format(active_users), unsafe_allow_html=True)
+                    
+                    with lm3:
+                        avg_recovery_live = live_df['recovery_score'].mean()
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                                    padding: 1.2rem; border-radius: 12px; text-align: center;
+                                    border: 1px solid rgba(34, 197, 94, 0.3);'>
+                            <p style='color: #888; margin: 0; font-size: 0.75rem;'>💚 AVG RECOVERY</p>
+                            <h2 style='color: #22C55E; margin: 0.3rem 0;'>{:.1f}%</h2>
+                            <p style='color: #22C55E; margin: 0; font-size: 0.8rem;'>Real-time</p>
+                        </div>
+                        """.format(avg_recovery_live), unsafe_allow_html=True)
+                    
+                    with lm4:
+                        avg_strain_live = live_df['day_strain'].mean()
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                                    padding: 1.2rem; border-radius: 12px; text-align: center;
+                                    border: 1px solid rgba(239, 68, 68, 0.3);'>
+                            <p style='color: #888; margin: 0; font-size: 0.75rem;'>💪 AVG STRAIN</p>
+                            <h2 style='color: #EF4444; margin: 0.3rem 0;'>{:.1f}</h2>
+                            <p style='color: #EF4444; margin: 0; font-size: 0.8rem;'>Intensity</p>
+                        </div>
+                        """.format(avg_strain_live), unsafe_allow_html=True)
+                    
+                    with lm5:
+                        workouts_now = live_df[live_df['workout_completed'] == 1]['user_id'].nunique()
+                        st.markdown("""
+                        <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                                    padding: 1.2rem; border-radius: 12px; text-align: center;
+                                    border: 1px solid rgba(168, 85, 247, 0.3);'>
+                            <p style='color: #888; margin: 0; font-size: 0.75rem;'>🏋️ WORKOUTS</p>
+                            <h2 style='color: #A855F7; margin: 0.3rem 0;'>{}</h2>
+                            <p style='color: #A855F7; margin: 0; font-size: 0.8rem;'>In Progress</p>
+                        </div>
+                        """.format(workouts_now), unsafe_allow_html=True)
+                    
+                    st.markdown("---")
+                    
+                    # ═══════════════════════════════════════════════════════════════
+                    # LIVE CHARTS ROW 1
+                    # ═══════════════════════════════════════════════════════════════
+                    live_chart1, live_chart2 = st.columns(2)
+                    
+                    with live_chart1:
+                        st.markdown("#### 📈 Recovery Score Stream")
+                        live_sorted = live_df.sort_values('timestamp').tail(100)
+                        
+                        fig_live_recovery = go.Figure()
+                        fig_live_recovery.add_trace(go.Scatter(
+                            x=live_sorted['timestamp'],
+                            y=live_sorted['recovery_score'],
+                            mode='lines+markers',
+                            name='Recovery',
+                            line=dict(color='#00D4AA', width=2),
+                            marker=dict(size=6),
+                            fill='tozeroy',
+                            fillcolor='rgba(0, 212, 170, 0.1)'
+                        ))
+                        fig_live_recovery.add_hline(y=66, line_dash="dash", line_color="green", annotation_text="Green Zone")
+                        fig_live_recovery.add_hline(y=33, line_dash="dash", line_color="red", annotation_text="Red Zone")
+                        fig_live_recovery.update_layout(template='plotly_dark', height=350, margin=dict(l=20, r=20, t=30, b=20), xaxis_title="Time", yaxis_title="Recovery %", yaxis_range=[0, 100])
+                        st.plotly_chart(fig_live_recovery, use_container_width=True)
+                    
+                    with live_chart2:
+                        st.markdown("#### 💪 Day Strain Stream")
+                        fig_live_strain = go.Figure()
+                        fig_live_strain.add_trace(go.Scatter(
+                            x=live_sorted['timestamp'],
+                            y=live_sorted['day_strain'],
+                            mode='lines+markers',
+                            name='Strain',
+                            line=dict(color='#FF6B6B', width=2),
+                            marker=dict(size=6),
+                            fill='tozeroy',
+                            fillcolor='rgba(255, 107, 107, 0.1)'
+                        ))
+                        fig_live_strain.update_layout(template='plotly_dark', height=350, margin=dict(l=20, r=20, t=30, b=20), xaxis_title="Time", yaxis_title="Strain", yaxis_range=[0, 21])
+                        st.plotly_chart(fig_live_strain, use_container_width=True)
+                    
+                    # ═══════════════════════════════════════════════════════════════
+                    # LIVE CHARTS ROW 2
+                    # ═══════════════════════════════════════════════════════════════
+                    live_chart3, live_chart4 = st.columns(2)
+                    
+                    with live_chart3:
+                        st.markdown("#### ❤️ HRV Distribution (Live)")
+                        fig_hrv_dist = px.histogram(live_df, x='hrv', nbins=30, color_discrete_sequence=['#9B59B6'], title='Heart Rate Variability Distribution')
+                        fig_hrv_dist.update_layout(template='plotly_dark', height=300, showlegend=False, margin=dict(l=20, r=20, t=40, b=20))
+                        st.plotly_chart(fig_hrv_dist, use_container_width=True)
+                    
+                    with live_chart4:
+                        st.markdown("#### 🏋️ Activity Breakdown (Live)")
+                        activity_counts = live_df['activity_type'].value_counts()
+                        fig_activity_pie = px.pie(values=activity_counts.values, names=activity_counts.index, title='Current Activity Distribution', hole=0.4, color_discrete_sequence=px.colors.qualitative.Set2)
+                        fig_activity_pie.update_layout(template='plotly_dark', height=300, margin=dict(l=20, r=20, t=40, b=20))
+                        st.plotly_chart(fig_activity_pie, use_container_width=True)
+                    
+                    st.markdown("---")
+                    st.markdown("#### 📝 Latest Records (Live Stream)")
+                    display_cols = ['timestamp', 'user_id', 'fitness_level', 'recovery_score', 'day_strain', 'hrv', 'activity_type', 'workout_completed']
+                    latest_records = live_df.sort_values('timestamp', ascending=False).head(20)[display_cols]
+                    st.dataframe(latest_records, use_container_width=True, height=300)
+                    
+                else:
+                    st.info("⏳ Waiting for live data... The data generator is initializing.")
+            
+            except Exception as e:
+                st.error(f"❌ Error loading live data: {e}")
+                st.info("Make sure the data generator service is running.")
+        
+        else:
+            st.warning("""
+            ### 🟠 Live Data Service Not Running
+            
+            The live data generator service is not active. To start it:
+            
+            ```bash
+            docker-compose up -d
+            ```
+            
+            This will start both the dashboard and the live data generator.
+            """)
+        
+        # Auto-refresh at end of tab (after content loads)
+        if auto_refresh:
+            st.markdown(f"<p style='color: #00D4AA; font-size: 0.8rem;'>⏱️ Auto-refresh enabled - refreshing every {refresh_rate}s</p>", unsafe_allow_html=True)
+            import time as time_module
+            time_module.sleep(refresh_rate)
+            st.rerun()
+    
+    else:
+        # FIXED DATASET VIEW
+        st.markdown("### 📁 Fixed Dataset Overview")
+        st.markdown("> **Viewing your fixed synthetic dataset** - 100K+ records from whoop_fitness.csv")
+        
+        # Dataset stats
+        st.markdown("---")
+        st.markdown("### 📊 Dataset Statistics")
+        
+        ds1, ds2, ds3, ds4, ds5 = st.columns(5)
+        
+        with ds1:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(59, 130, 246, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>📁 TOTAL RECORDS</p>
+                <h2 style='color: #3B82F6; margin: 0.3rem 0;'>{len(filtered_df):,}</h2>
+                <p style='color: #3B82F6; margin: 0; font-size: 0.8rem;'>Filtered</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds2:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(0, 212, 170, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>👥 UNIQUE USERS</p>
+                <h2 style='color: #00D4AA; margin: 0.3rem 0;'>{filtered_df['user_id'].nunique():,}</h2>
+                <p style='color: #00D4AA; margin: 0; font-size: 0.8rem;'>In dataset</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds3:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(34, 197, 94, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💚 AVG RECOVERY</p>
+                <h2 style='color: #22C55E; margin: 0.3rem 0;'>{filtered_df['recovery_score'].mean():.1f}%</h2>
+                <p style='color: #22C55E; margin: 0; font-size: 0.8rem;'>Score</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds4:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(239, 68, 68, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💪 AVG STRAIN</p>
+                <h2 style='color: #EF4444; margin: 0.3rem 0;'>{filtered_df['day_strain'].mean():.1f}</h2>
+                <p style='color: #EF4444; margin: 0; font-size: 0.8rem;'>Intensity</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds5:
+            workout_count = filtered_df[filtered_df['workout_completed'] == 1].shape[0]
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(168, 85, 247, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>🏋️ WORKOUTS</p>
+                <h2 style='color: #A855F7; margin: 0.3rem 0;'>{workout_count:,}</h2>
+                <p style='color: #A855F7; margin: 0; font-size: 0.8rem;'>Completed</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Quick overview charts
+        st.markdown("### 📈 Data Overview")
+        
+        ov1, ov2 = st.columns(2)
+        
+        with ov1:
+            # Recovery distribution
+            fig_rec = px.histogram(filtered_df, x='recovery_score', nbins=30,
+                                  color_discrete_sequence=['#00D4AA'],
+                                  title='Recovery Score Distribution')
+            fig_rec.update_layout(template='plotly_dark', height=350)
+            st.plotly_chart(fig_rec, use_container_width=True)
+        
+        with ov2:
+            # Activity breakdown
+            activity_counts = filtered_df['activity_type'].value_counts().head(10)
+            fig_act = px.bar(x=activity_counts.index, y=activity_counts.values,
+                            color_discrete_sequence=['#6366F1'],
+                            title='Top 10 Activity Types')
+            fig_act.update_layout(template='plotly_dark', height=350, 
+                                 xaxis_title='Activity', yaxis_title='Count')
+            st.plotly_chart(fig_act, use_container_width=True)
+        
+        # Data sample table
+        st.markdown("### 📋 Data Sample (Last 20 Records)")
+        display_cols = ['date', 'user_id', 'fitness_level', 'recovery_score', 
+                       'day_strain', 'hrv', 'activity_type', 'workout_completed']
+        sample_records = filtered_df.sort_values('date', ascending=False).head(20)[display_cols]
+        st.dataframe(sample_records, use_container_width=True, height=400)
+        
+        # Tip to switch to live
+        st.markdown("---")
+        st.info("💡 **Tip:** Switch to '🔴 Live Feed' in the sidebar to see real-time streaming data!")
+
+
+# ============================================================================
+# TAB 2: OVERVIEW & TREEMAP (was Tab 1)
+# ============================================================================
+with tab2:
     st.markdown("### 🌳 Hierarchical Activity Breakdown")
     st.markdown("> **Insight:** This treemap reveals the hierarchical distribution of workout activities, showing which sports and activity types dominate user behavior patterns.")
     
@@ -1127,9 +1702,9 @@ with tab2:
 
 
 # ============================================================================
-# TAB 3: HEATMAPS & SEASONAL ANALYSIS
+# TAB 4: HEATMAPS & SEASONAL ANALYSIS (was Tab 3)
 # ============================================================================
-with tab3:
+with tab4:
     st.markdown("### 🔥 Seasonal Activity Heatmap")
     st.markdown("> **Insight:** This heatmap reveals workout intensity patterns across seasons and days of the week, showing when users push hardest and when they recover.")
     
@@ -1213,9 +1788,9 @@ with tab3:
 
 
 # ============================================================================
-# TAB 4: ADVANCED CHARTS (VIOLIN, BOX, RADAR, PARETO)
+# TAB 5: ADVANCED CHARTS (was Tab 4)
 # ============================================================================
-with tab4:
+with tab5:
     st.markdown("### 🎻 Violin Plot: Recovery Distribution by Fitness Level")
     st.markdown("> **Insight:** Violin plots show the full distribution shape - advanced athletes have tighter recovery distributions, while beginners show more variability.")
     
@@ -1371,9 +1946,9 @@ with tab4:
 
 
 # ============================================================================
-# TAB 5: MACHINE LEARNING & CLUSTERING
+# TAB 6: MACHINE LEARNING & CLUSTERING (was Tab 5)
 # ============================================================================
-with tab5:
+with tab6:
     st.markdown("### 🧠 RFM Analysis with K-Means Clustering")
     st.markdown("> **Insight:** RFM (Recency, Frequency, Monetary) analysis segments users by workout behavior - identifying 'Champions' who train consistently with high intensity.")
     
@@ -1506,9 +2081,9 @@ with tab5:
 
 
 # ============================================================================
-# TAB 6: WHAT-IF ANALYSIS
+# TAB 7: WHAT-IF ANALYSIS (was Tab 6)
 # ============================================================================
-with tab6:
+with tab7:
     st.markdown("### 🔮 What-If Scenario Analysis")
     st.markdown("> **Insight:** Interactive what-if analysis lets you explore how changing key variables might impact fitness outcomes based on historical patterns.")
     
@@ -1646,9 +2221,9 @@ with tab6:
 
 
 # ============================================================================
-# TAB 7: ASSOCIATION MINING (MARKET BASKET ANALYSIS)
+# TAB 8: ASSOCIATION MINING (was Tab 7)
 # ============================================================================
-with tab7:
+with tab8:
     st.markdown("### 🛒 Association Rule Mining (Apriori Algorithm)")
     st.markdown("> **Insight:** Market basket analysis discovers hidden patterns - like which workout behaviors frequently occur together, similar to finding 'if you bought X, you'll like Y' patterns.")
     
