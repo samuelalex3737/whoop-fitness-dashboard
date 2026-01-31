@@ -1220,12 +1220,136 @@ tab1, tab2, tab3, tab4, tab5, tab6, tab7, tab8 = st.tabs([
 # TAB 0: LIVE DATA FEED
 # ============================================================================
 with tab1:
-    # On Streamlit Cloud, always show Fixed Dataset view
-    if IS_STREAMLIT_CLOUD:
+    # On Streamlit Cloud OR Fixed Dataset selected, show Fixed Dataset view
+    if IS_STREAMLIT_CLOUD or st.session_state.get('data_source', '📁 Fixed Dataset') == "📁 Fixed Dataset":
         st.markdown("### 📁 Fixed Dataset Overview")
         st.markdown("> **Viewing your synthetic WHOOP dataset** - 100K+ comprehensive fitness records")
-        st.info("☁️ **Cloud Deployment Mode**: Live data streaming requires Docker. Switch to local mode for real-time data feeds.")
-    elif st.session_state.get('data_source', '📁 Fixed Dataset') == "🔴 Live Feed":
+        
+        if IS_STREAMLIT_CLOUD:
+            st.info("☁️ **Cloud Deployment Mode**: Live data streaming requires Docker. Run locally for real-time data feeds.")
+        
+        # Dataset stats
+        st.markdown("---")
+        st.markdown("### 📊 Dataset Statistics")
+        
+        ds1, ds2, ds3, ds4, ds5 = st.columns(5)
+        
+        with ds1:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(59, 130, 246, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>📁 TOTAL RECORDS</p>
+                <h2 style='color: #3B82F6; margin: 0.3rem 0;'>{len(filtered_df):,}</h2>
+                <p style='color: #3B82F6; margin: 0; font-size: 0.8rem;'>Filtered</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds2:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(0, 212, 170, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>👥 UNIQUE USERS</p>
+                <h2 style='color: #00D4AA; margin: 0.3rem 0;'>{filtered_df['user_id'].nunique():,}</h2>
+                <p style='color: #00D4AA; margin: 0; font-size: 0.8rem;'>In dataset</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds3:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(34, 197, 94, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💚 AVG RECOVERY</p>
+                <h2 style='color: #22C55E; margin: 0.3rem 0;'>{filtered_df['recovery_score'].mean():.1f}%</h2>
+                <p style='color: #22C55E; margin: 0; font-size: 0.8rem;'>Score</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds4:
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(239, 68, 68, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💪 AVG STRAIN</p>
+                <h2 style='color: #EF4444; margin: 0.3rem 0;'>{filtered_df['day_strain'].mean():.1f}</h2>
+                <p style='color: #EF4444; margin: 0; font-size: 0.8rem;'>Intensity</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        with ds5:
+            workout_count = filtered_df[filtered_df['workout_completed'] == 1].shape[0]
+            st.markdown(f"""
+            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
+                        padding: 1.2rem; border-radius: 12px; text-align: center;
+                        border: 1px solid rgba(168, 85, 247, 0.3);'>
+                <p style='color: #888; margin: 0; font-size: 0.75rem;'>🏋️ WORKOUTS</p>
+                <h2 style='color: #A855F7; margin: 0.3rem 0;'>{workout_count:,}</h2>
+                <p style='color: #A855F7; margin: 0; font-size: 0.8rem;'>Completed</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # Quick overview charts
+        st.markdown("### 📈 Data Overview")
+        
+        ov1, ov2 = st.columns(2)
+        
+        with ov1:
+            # Recovery distribution
+            fig_rec = px.histogram(filtered_df, x='recovery_score', nbins=30,
+                                  color_discrete_sequence=['#00D4AA'],
+                                  title='Recovery Score Distribution')
+            fig_rec.update_layout(template='plotly_dark', height=350)
+            st.plotly_chart(fig_rec, use_container_width=True)
+        
+        with ov2:
+            # Activity breakdown
+            activity_counts = filtered_df['activity_type'].value_counts().head(10)
+            fig_act = px.bar(x=activity_counts.index, y=activity_counts.values,
+                            color_discrete_sequence=['#6366F1'],
+                            title='Top 10 Activity Types')
+            fig_act.update_layout(template='plotly_dark', height=350, 
+                                 xaxis_title='Activity', yaxis_title='Count')
+            st.plotly_chart(fig_act, use_container_width=True)
+        
+        # Additional charts for the overview tab
+        ov3, ov4 = st.columns(2)
+        
+        with ov3:
+            # Strain vs Recovery scatter
+            fig_scatter = px.scatter(filtered_df.sample(min(1000, len(filtered_df))), 
+                                    x='recovery_score', y='day_strain',
+                                    color='fitness_level',
+                                    title='Recovery vs Strain by Fitness Level',
+                                    color_discrete_sequence=px.colors.qualitative.Set2)
+            fig_scatter.update_layout(template='plotly_dark', height=350)
+            st.plotly_chart(fig_scatter, use_container_width=True)
+        
+        with ov4:
+            # HRV distribution by fitness level
+            fig_hrv = px.box(filtered_df, x='fitness_level', y='hrv',
+                            color='fitness_level',
+                            title='HRV by Fitness Level',
+                            color_discrete_sequence=px.colors.qualitative.Set2)
+            fig_hrv.update_layout(template='plotly_dark', height=350, showlegend=False)
+            st.plotly_chart(fig_hrv, use_container_width=True)
+        
+        # Data sample table
+        st.markdown("### 📋 Data Sample (Last 20 Records)")
+        display_cols = ['date', 'user_id', 'fitness_level', 'recovery_score', 
+                       'day_strain', 'hrv', 'activity_type', 'workout_completed']
+        sample_records = filtered_df.sort_values('date', ascending=False).head(20)[display_cols]
+        st.dataframe(sample_records, use_container_width=True, height=400)
+        
+        if not IS_STREAMLIT_CLOUD:
+            st.markdown("---")
+            st.info("💡 **Tip:** Switch to '🔴 Live Feed' in the sidebar to see real-time streaming data!")
+    
+    else:
+        # LIVE FEED VIEW (only when running locally with Docker)
         st.markdown("### 🔴 Real-Time WHOOP Data Feed")
         st.markdown("> **Live streaming data from WHOOP devices** - Updates every 3 seconds with synthetic fitness metrics")
         
@@ -1410,109 +1534,6 @@ with tab1:
             import time as time_module
             time_module.sleep(refresh_rate)
             st.rerun()
-    
-    else:
-        # FIXED DATASET VIEW
-        st.markdown("### 📁 Fixed Dataset Overview")
-        st.markdown("> **Viewing your fixed synthetic dataset** - 100K+ records from whoop_fitness.csv")
-        
-        # Dataset stats
-        st.markdown("---")
-        st.markdown("### 📊 Dataset Statistics")
-        
-        ds1, ds2, ds3, ds4, ds5 = st.columns(5)
-        
-        with ds1:
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
-                        padding: 1.2rem; border-radius: 12px; text-align: center;
-                        border: 1px solid rgba(59, 130, 246, 0.3);'>
-                <p style='color: #888; margin: 0; font-size: 0.75rem;'>📁 TOTAL RECORDS</p>
-                <h2 style='color: #3B82F6; margin: 0.3rem 0;'>{len(filtered_df):,}</h2>
-                <p style='color: #3B82F6; margin: 0; font-size: 0.8rem;'>Filtered</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with ds2:
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
-                        padding: 1.2rem; border-radius: 12px; text-align: center;
-                        border: 1px solid rgba(0, 212, 170, 0.3);'>
-                <p style='color: #888; margin: 0; font-size: 0.75rem;'>👥 UNIQUE USERS</p>
-                <h2 style='color: #00D4AA; margin: 0.3rem 0;'>{filtered_df['user_id'].nunique():,}</h2>
-                <p style='color: #00D4AA; margin: 0; font-size: 0.8rem;'>In dataset</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with ds3:
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
-                        padding: 1.2rem; border-radius: 12px; text-align: center;
-                        border: 1px solid rgba(34, 197, 94, 0.3);'>
-                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💚 AVG RECOVERY</p>
-                <h2 style='color: #22C55E; margin: 0.3rem 0;'>{filtered_df['recovery_score'].mean():.1f}%</h2>
-                <p style='color: #22C55E; margin: 0; font-size: 0.8rem;'>Score</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with ds4:
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
-                        padding: 1.2rem; border-radius: 12px; text-align: center;
-                        border: 1px solid rgba(239, 68, 68, 0.3);'>
-                <p style='color: #888; margin: 0; font-size: 0.75rem;'>💪 AVG STRAIN</p>
-                <h2 style='color: #EF4444; margin: 0.3rem 0;'>{filtered_df['day_strain'].mean():.1f}</h2>
-                <p style='color: #EF4444; margin: 0; font-size: 0.8rem;'>Intensity</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        with ds5:
-            workout_count = filtered_df[filtered_df['workout_completed'] == 1].shape[0]
-            st.markdown(f"""
-            <div style='background: linear-gradient(135deg, #1a2035 0%, #0d1117 100%); 
-                        padding: 1.2rem; border-radius: 12px; text-align: center;
-                        border: 1px solid rgba(168, 85, 247, 0.3);'>
-                <p style='color: #888; margin: 0; font-size: 0.75rem;'>🏋️ WORKOUTS</p>
-                <h2 style='color: #A855F7; margin: 0.3rem 0;'>{workout_count:,}</h2>
-                <p style='color: #A855F7; margin: 0; font-size: 0.8rem;'>Completed</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-        st.markdown("---")
-        
-        # Quick overview charts
-        st.markdown("### 📈 Data Overview")
-        
-        ov1, ov2 = st.columns(2)
-        
-        with ov1:
-            # Recovery distribution
-            fig_rec = px.histogram(filtered_df, x='recovery_score', nbins=30,
-                                  color_discrete_sequence=['#00D4AA'],
-                                  title='Recovery Score Distribution')
-            fig_rec.update_layout(template='plotly_dark', height=350)
-            st.plotly_chart(fig_rec, use_container_width=True)
-        
-        with ov2:
-            # Activity breakdown
-            activity_counts = filtered_df['activity_type'].value_counts().head(10)
-            fig_act = px.bar(x=activity_counts.index, y=activity_counts.values,
-                            color_discrete_sequence=['#6366F1'],
-                            title='Top 10 Activity Types')
-            fig_act.update_layout(template='plotly_dark', height=350, 
-                                 xaxis_title='Activity', yaxis_title='Count')
-            st.plotly_chart(fig_act, use_container_width=True)
-        
-        # Data sample table
-        st.markdown("### 📋 Data Sample (Last 20 Records)")
-        display_cols = ['date', 'user_id', 'fitness_level', 'recovery_score', 
-                       'day_strain', 'hrv', 'activity_type', 'workout_completed']
-        sample_records = filtered_df.sort_values('date', ascending=False).head(20)[display_cols]
-        st.dataframe(sample_records, use_container_width=True, height=400)
-        
-        # Tip to switch to live
-        st.markdown("---")
-        st.info("💡 **Tip:** Switch to '🔴 Live Feed' in the sidebar to see real-time streaming data!")
 
 
 # ============================================================================
